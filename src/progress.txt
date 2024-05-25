@@ -1,0 +1,3 @@
+murta: 
+instanciei os N clientes, os N toys, e os N funcionarios;
+iniciei as threads de cada um deles.

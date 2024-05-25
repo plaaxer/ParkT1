@@ -16,9 +16,13 @@
 // Thread que implementa o fluxo do cliente no parque.
 void *enjoy(void *arg){
 
-    //Sua lógica aqui
+    // MURTA
+    client_t *client = (client_t *)arg; // casting do argumento na struct do cliente
+    debug("[ENTER] Turista [%d] entrou no parque com [%d] moedas.\n", client->id, client->coins);
+    // Cliente entra na fila da bilheteria
+    queue_enter(client);
 
-
+    // /MURTA
     debug("[EXIT] - O turista saiu do parque.\n");
     pthread_exit(NULL);
 }
@@ -47,7 +51,14 @@ void queue_enter(client_t *self){
 
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar os clientes.
 void open_gate(client_args *args){
-    // Sua lógica aqui
+    // MURTA
+    // Cria N threads (N clientes)
+    pthread_t *clients = malloc(args->n * sizeof(pthread_t));
+    for (int i = 0; i < args->n; i++){
+        pthread_create(&clients[i], NULL, enjoy, args->clients[i]);
+    }
+
+    // /MURTA
 }
 
 // Essa função deve finalizar os clientes

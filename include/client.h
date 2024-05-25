@@ -14,5 +14,6 @@
  *******************************/
 void open_gate(client_args *args);
 void close_gate();
+void queue_enter(client_t *self);
 
 #endif
