@@ -13,5 +13,4 @@
  *          ATENÇÃO               *
  *********************************/
 extern Queue *gate_queue;
-
 #endif
