@@ -39,7 +39,7 @@ client_t **init_clients(int number, int toy_number, toy_t **toys){
 
 // Inicia a instância dos brinquedos
 toy_t **init_toys(int number){
-    toy_t **toys = malloc(number * sizeof(toy_t));
+    toy_t **toys = malloc(number * sizeof(toy_t *));
     for (int i = 0; i < number; i++){
         toys[i] = (toy_t *) malloc(sizeof(toy_t));
         toys[i]->id = i + 1;
