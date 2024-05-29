@@ -121,8 +121,10 @@ int main(int argc, char *argv[]){
 
     // Ligando os brinquedos.
     open_toys(toys_args);
+
     // Os turistas entram no parque.
     open_gate(cli_args);
+    
     // A bilheteria abre.
     open_tickets(ticket_args);
 

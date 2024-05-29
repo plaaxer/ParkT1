@@ -26,15 +26,18 @@ void *turn_on(void *args){
     pthread_exit(NULL);
 }
 
-
 // Essa função recebe como argumento informações e deve iniciar os brinquedos.
 void open_toys(toy_args *args){
-    // Murta
     // Cria N threads (N brinquedos)
-    pthread_t *toys = malloc(args->n * sizeof(pthread_t));
     for (int i = 0; i < args->n; i++){
-        pthread_create(&toys[i], NULL, turn_on, args->toys[i]);
+        pthread_create(&(args->toys[i]->threads), NULL, turn_on, args->toys[i]);
     }
+}
+
+// Desligando os brinquedos
+void close_toys(){
+    // Sua lógica aqui
+
     // Espera todas as threads finalizarem
     for (int i = 0; i < args->n; i++){
         pthread_join(toys[i], NULL);
@@ -42,9 +45,4 @@ void open_toys(toy_args *args){
     // Libera a memória
     free(toys);
     // /Murta
-}
-
-// Desligando os brinquedos
-void close_toys(){
-    // Sua lógica aqui
 }
