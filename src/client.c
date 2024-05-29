@@ -12,19 +12,41 @@
 #include "queue.h"
 #include "shared.h"
 
+pthread_t dispatcher;
+
+
 
 // Thread que implementa o fluxo do cliente no parque.
 void *enjoy(void *arg){
 
     // MURTA
     client_t *client = (client_t *)arg; // casting do argumento na struct do cliente
-    debug("[ENTER] Turista [%d] entrou no parque com [%d] moedas.\n", client->id, client->coins);
+    debug("[ENTER] Turista [%d] entrou na fila com [%d] moedas.\n", client->id, client->coins);
     queue_enter(client);
     debug("[ENTER] - Turista [%d] entrou no parque.\n", client->id);
+    printf("thread [%d] finalizada\n", client->id);
 
     // /MURTA
+    while (1) {
+        // Perform client activities here
+    }
     debug("[EXIT] - O turista saiu do parque.\n");
     pthread_exit(NULL);
+}
+
+// Criador de clientes (funcao dispatcher)
+void create_clients(client_args *args){
+    // Cria N threads (N clientes)
+    pthread_t *clients = malloc(args->n * sizeof(pthread_t));
+    for (int i = 0; i < args->n; i++){
+        pthread_create(&clients[i], NULL, enjoy, args->clients[i]);
+    }
+    // Espera todas as threads finalizarem
+    for (int i = 0; i < args->n; i++){
+        pthread_join(clients[i], NULL);
+    }
+    // Libera a memória
+    free(clients);
 }
 
 // Funcao onde o cliente compra as moedas para usar os brinquedos
@@ -45,7 +67,6 @@ void wait_ticket(client_t *self){
 // Funcao onde o cliente entra na fila da bilheteria
 void queue_enter(client_t *self){
     // Murta
-    debug("[WAITING] - Turista [%d] entrou na fila do portao principal\n", self->id);
     // Cliente entra na fila da bilheteria
     enqueue(gate_queue, self->id);
     wait_ticket(self);
@@ -55,21 +76,15 @@ void queue_enter(client_t *self){
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar os clientes.
 void open_gate(client_args *args){
     // MURTA
-    // Cria N threads (N clientes)
-    pthread_t *clients = malloc(args->n * sizeof(pthread_t));
-    for (int i = 0; i < args->n; i++){
-        pthread_create(&clients[i], NULL, enjoy, args->clients[i]);
-    }
-    // Espera todas as threads finalizarem
-    for (int i = 0; i < args->n; i++){
-        pthread_join(clients[i], NULL);
-    }
-    // Libera a memória
-    free(clients);
+    pthread_create(&dispatcher, NULL, (void *)create_clients, args);
+    pthread_join(dispatcher, NULL);
+    debug("[EXIT PARQUE DEPOIS DE DISPATCHER]\n")
     // /MURTA
 }
 
 // Essa função deve finalizar os clientes
 void close_gate(){
-   //Sua lógica aqui
+    //murta
+    debug("[EXIT PARQUE FECHADO]\n")
+    pthread_cancel(dispatcher);
 }
