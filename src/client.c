@@ -12,9 +12,8 @@
 #include "queue.h"
 #include "shared.h"
 
-pthread_t dispatcher;
-
-
+pthread_t *clients;
+int n_clients;
 
 // Thread que implementa o fluxo do cliente no parque.
 void *enjoy(void *arg){
@@ -34,9 +33,10 @@ void *enjoy(void *arg){
     pthread_exit(NULL);
 }
 
-// Criador de clientes (funcao dispatcher)
+// Criador de clientes
 void create_clients(client_args *args){
     // Cria N threads (N clientes)
+    n_clients = args->n;
     pthread_t *clients = malloc(args->n * sizeof(pthread_t));
     for (int i = 0; i < args->n; i++){
         pthread_create(&clients[i], NULL, enjoy, args->clients[i]);
@@ -71,13 +71,13 @@ void queue_enter(client_t *self){
     enqueue(gate_queue, self->id);
     wait_ticket(self);
     buy_coins(self);
+    close_gate();
 }
 
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar os clientes.
 void open_gate(client_args *args){
     // MURTA
-    pthread_create(&dispatcher, NULL, (void *)create_clients, args);
-    pthread_join(dispatcher, NULL);
+    create_clients(args);
     debug("[EXIT PARQUE DEPOIS DE DISPATCHER]\n")
     // /MURTA
 }
@@ -85,6 +85,8 @@ void open_gate(client_args *args){
 // Essa função deve finalizar os clientes
 void close_gate(){
     //murta
-    debug("[EXIT PARQUE FECHADO]\n")
-    pthread_cancel(dispatcher);
+    debug("CLOSE_GATE FOI CHAMADO\n");
+    for (int i = 0; i < n_clients; i++){
+        pthread_cancel(clients[i]);
+    }
 }
