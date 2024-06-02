@@ -91,7 +91,6 @@ void finish_tickets(ticket_t **tickets, int number_clients){
  *************************************************/
 
 int main(int argc, char *argv[]){
-
     client_args *cli_args = (client_args *) malloc(sizeof(client_args));
     tickets_args *ticket_args = (tickets_args *) malloc(sizeof(tickets_args));
     toy_args *toys_args = (toy_args *) malloc(sizeof(toy_args));

@@ -28,14 +28,6 @@ void create_clients(client_args *args) {
     for (int i = 0; i < n_clients; i++){
         pthread_create(&clients_t[i], NULL, enjoy, args->clients[i]);
     }
-
-    // Espera todas as threads finalizarem
-    for (int i = 0; i < n_clients; i++){
-        pthread_join(clients_t[i], NULL);
-    }
-
-    // Libera a memória
-    free(clients_t);
 }
 
 
@@ -49,19 +41,19 @@ void *enjoy(void *arg) {
 
   // MURTA
   client_t *client = (client_t *)arg; // casting do argumento na struct do cliente
-
-  debug("[ENTER] Turista [%d] entrou na fila com [%d] moedas.\n",
+ 
+  queue_enter(client);
+  sleep(1);
+  debug("[ENTER] Turista [%d] entrou no parque com [%d] moedas.\n",
         client->id,
         client->coins);
   
   sleep(1);
 
-  debug("[ENTER] - Turista [%d] entrou no parque.\n",
-        client->id);
-// /MURTA
-  while (0) {
-    // Perform client activities here
-  }
+  debug("[ENTER] Turista [%d] ta brincando muito feliz!\n",
+      client->id);
+
+  sleep(1);
 
   debug("[EXIT] - O turista saiu do parque.\n");
   pthread_exit(NULL);
@@ -92,7 +84,8 @@ void wait_ticket(client_t *self) {
         self->id);
   
   // semáforo vai entrar aqui e venda pro cliente
-  // sem_wait(&dummy1);
+  sem_post(&available_tickets);
+  sem_wait(&available_clients);
 }
 
 
@@ -120,7 +113,7 @@ void queue_enter(client_t *self) {
 void open_gate(client_args *args) {
   // MURTA
   create_clients(args);
-  debug("[EXIT PARQUE DEPOIS DE DISPATCHER]\n")
+  debug("[INFO] O parque foi aberto!\n")
   // /MURTA join ou enjoy
 }
 
@@ -130,9 +123,18 @@ void open_gate(client_args *args) {
 void close_gate() {
   // murta
 
-  debug("CLOSE_GATE FOI CHAMADO\n");
+  debug("O Parque irá fechar agora!\n");
+
+  // Espera todas as threads finalizarem
+  for (int i = 0; i < n_clients; i++){
+      pthread_join(clients_t[i], NULL);
+  }
 
   for (int i = 0; i < n_clients; i++) 
     pthread_cancel(clients_t[i]);
-  
+
+  // Libera a memória
+    free(clients_t);
+
+ 
 }

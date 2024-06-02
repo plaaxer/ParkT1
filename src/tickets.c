@@ -14,21 +14,24 @@
 
 // Thread que implementa uma bilheteria
 void *sell(void *args) {
+  ticket_t *ticket = (ticket_t*)args; 
 
-  debug("[INFO] - Bilheteria Abriu!\n");
+  debug("[INFO] - Bilheteria [%d] Abriu!\n", ticket->id);
 
   // Murta
   // Enquanto fila nao-vazia
-  while (!is_queue_empty(gate_queue)) {
-    // Atende um cliente
-    
+
+    if (!is_queue_empty(gate_queue)){ 
     int id = dequeue(gate_queue);
-    // sem_post(&dummy1);
+
     debug("[INFO] - Cliente [%d] atendido.\n", id);
+    }
+
+    sem_post(&available_clients);
+    sem_wait(&available_tickets);
 
     // Libera o cliente
     // funcao para liberar o cliente AQUI
-  }
 
   pthread_exit(NULL);
 }
@@ -39,14 +42,14 @@ void *sell(void *args) {
 // Essa função recebe como argumento informações sobre a bilheteria e deve
 // iniciar os atendentes.
 void open_tickets(tickets_args *args) {
-  sem_init(&dummy1, 0, 1);
+  initialize_ticketing();
 
   // Murta
   // Fila da bilheteria ja criada em main (gate_queue)
   // Cria N threads (N funcionários da bilheteria)
 
   for (int i = 0; i < args->n; i++) {
-    pthread_create(&args->tickets[i]->thread, NULL, sell, NULL);
+    pthread_create(&args->tickets[i]->thread, NULL, sell, (void*) args->tickets[i]);
   }
 
   // Espera todas as threads finalizarem

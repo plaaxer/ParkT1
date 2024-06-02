@@ -5,9 +5,11 @@
 
 #include <semaphore.h>
 
-extern sem_t dummy1;
+extern sem_t available_tickets;
+extern sem_t available_clients;
 
-
+void initialize_ticketing();
+  
 // Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 
 
