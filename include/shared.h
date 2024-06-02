@@ -3,6 +3,11 @@
 
 #include <defs.h>
 
+#include <semaphore.h>
+
+extern sem_t dummy1;
+
+
 // Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 
 

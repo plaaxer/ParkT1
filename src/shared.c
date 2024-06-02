@@ -1,10 +1,9 @@
 #include "shared.h"
-
 #include <queue.h>
 
 
-// Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 
+// Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 
 /**********************************
  *          ATENÇÃO               *
