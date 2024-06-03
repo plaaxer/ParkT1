@@ -5,8 +5,8 @@
 
 #include <semaphore.h>
 
-extern sem_t available_tickets;
-extern sem_t available_clients;
+extern pthread_mutex_t *clients_mutexes; // mutexes dos clientes
+extern sem_t clients_in_line; // n de clientes na fila da bilheteria
 
 void initialize_ticketing();
   

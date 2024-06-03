@@ -12,6 +12,12 @@
 #include "shared.h"
 #include <queue.h>
 
+int ended = 0;
+
+void initialize_ticketing(){
+  sem_init(&clients_in_line, 0 , 0);
+}
+
 // Thread que implementa uma bilheteria
 void *sell(void *args) {
   ticket_t *ticket = (ticket_t*)args; 
@@ -20,19 +26,25 @@ void *sell(void *args) {
 
   // Murta
   // Enquanto fila nao-vazia
+  
+  while(!ended){
+  // semaforo para esperar ter clientes na fila para prosseguir (evita busy waiting)
+    int coisa;
+    sem_getvalue(&clients_in_line, &coisa);
+    debug("[SEMAPHOR] - bilheteria [%d] // valor do semaforo: [%d]\n", ticket->id, coisa);
+    sem_wait(&clients_in_line);
 
-    if (!is_queue_empty(gate_queue)){ 
-    int id = dequeue(gate_queue);
+    // verificacao de se tem clientes na fila (vai sempre ser verdadeiro menos quando close_tickets ja foi chamado)
+    if (!is_queue_empty(gate_queue)){
+      int id = dequeue(gate_queue);
+      debug("[LOOP] - Bilheteria [%d] atendendo cliente [%d]\n", ticket->id, id);
+      
+      // libera o cliente para entrar no parque
+      pthread_mutex_unlock(&clients_mutexes[id-1]);
 
-    debug("[INFO] - Cliente [%d] atendido.\n", id);
     }
-
-    sem_post(&available_clients);
-    sem_wait(&available_tickets);
-
-    // Libera o cliente
-    // funcao para liberar o cliente AQUI
-
+  }
+  debug("[INFO] - Bilheteria [%d] Fechou!\n", ticket->id);
   pthread_exit(NULL);
 }
 
@@ -63,5 +75,7 @@ void open_tickets(tickets_args *args) {
 
 // Essa função deve finalizar a bilheteria
 void close_tickets() {
-    pthread_exit(NULL); 
+    debug("[INFO] - Bilheteria Fechou!\n");
+    sem_post(&clients_in_line); // apenas para liberar a bilheteria do trabalho para poder terminar
+    ended = 1;
 }

@@ -15,8 +15,19 @@
 #include <unistd.h>
 
 pthread_t *clients_t;
-int n_clients;
+int n_clients; // n clients deve ser publico para que close_gates o acesse
+pthread_mutex_t mutexteste;
+int test_variable = 0;
 
+void initializeClientMutexes() {
+  // Murta
+  // Inicializa os mutexes dos clientes
+  clients_mutexes = malloc(n_clients * sizeof(pthread_mutex_t));
+  for (int i = 0; i < n_clients; i++) {
+    pthread_mutex_init(&clients_mutexes[i], NULL);
+  }
+
+}
 
 // Criador de clientes
 void create_clients(client_args *args) {
@@ -25,12 +36,12 @@ void create_clients(client_args *args) {
     clients_t = malloc(args->n * sizeof(pthread_t));
     n_clients = args->n;
 
+    initializeClientMutexes(); // cria uma lista de mutex para cada cliente
+    debug("[INIT] - Inicializando lista de mutex\n");
     for (int i = 0; i < n_clients; i++){
         pthread_create(&clients_t[i], NULL, enjoy, args->clients[i]);
     }
 }
-
-
 
 // ========= Funções dadas ============= 
 
@@ -59,37 +70,44 @@ void *enjoy(void *arg) {
   pthread_exit(NULL);
 }
 
-
-
-
-
 // Funcao onde o cliente compra as moedas para usar os brinquedos
 void buy_coins(client_t *self) {
   // Murta
   self->coins = rand() % (MAX_COINS - 1) + MIN_COINS;
 
-  debug("[CASH] - Turista [%d] comprou [%d] moedas.\n", 
-          self->id, 
-          self->coins);
+  //debug("[CASH] - Turista [%d] comprou [%d] moedas.\n", 
+          //self->id, 
+          //self->coins);
 }
-
-
-
 
 // Função onde o cliente espera a liberacao da bilheteria para adentrar ao
 // parque.
 void wait_ticket(client_t *self) {
+  int coisa;
+  pthread_mutex_lock(&mutexteste);
+
   // Murta
   debug("[WAITING] - Turista [%d] esperando na fila do portao principal\n",
         self->id);
-  
-  // semáforo vai entrar aqui e venda pro cliente
-  sem_post(&available_tickets);
-  sem_wait(&available_clients);
+
+  // cliente indica que tem alguem na fila
+  sem_getvalue(&clients_in_line, &coisa);
+  debug("[SEMAPHORE] - cliente [%d] value BEFORE post: [%d]\n", self->id, coisa);
+
+  sem_post(&clients_in_line);
+
+  test_variable++;
+  debug("[test_variable] - [%d]\n", test_variable);
+
+  sem_getvalue(&clients_in_line, &coisa);
+  debug("[SEMAPHORE] - cliente [%d] value AFTER post: [%d]\n", self->id, coisa);
+
+  pthread_mutex_unlock(&mutexteste);
+
+  // cliente vai ser travado ate que a bilheteria o libere
+  pthread_mutex_lock(&clients_mutexes[self->id - 1]);
+  pthread_mutex_lock(&clients_mutexes[self->id - 1]);
 }
-
-
-
 
 // Funcao onde o cliente entra na fila da bilheteria
 void queue_enter(client_t *self) {
@@ -105,15 +123,12 @@ void queue_enter(client_t *self) {
 
 }
 
-
-
-
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar
 // os clientes.
 void open_gate(client_args *args) {
   // MURTA
+  pthread_mutex_init(&mutexteste, NULL);
   create_clients(args);
-  debug("[INFO] O parque foi aberto!\n")
   // /MURTA join ou enjoy
 }
 
@@ -121,18 +136,13 @@ void open_gate(client_args *args) {
 
 // Essa função deve finalizar os clientes
 void close_gate() {
-  // murta
-
-  debug("O Parque irá fechar agora!\n");
-
+  
+  debug("teste1\n")
   // Espera todas as threads finalizarem
   for (int i = 0; i < n_clients; i++){
       pthread_join(clients_t[i], NULL);
   }
-
-  for (int i = 0; i < n_clients; i++) 
-    pthread_cancel(clients_t[i]);
-
+  debug("teste2\n")
   // Libera a memória
     free(clients_t);
 
