@@ -6,9 +6,7 @@
 #include <semaphore.h>
 
 extern pthread_mutex_t *clients_mutexes; // mutexes dos clientes
-extern sem_t clients_in_line; // n de clientes na fila da bilheteria
-
-void initialize_ticketing();
+extern int number_of_clients; // numero de clientes
   
 // Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 

@@ -14,7 +14,6 @@
 #include "queue.h"
 #include "toy.h"
 
-
 // Inicia a fila
 void init_main_queue(){
     gate_queue = create_queue();
@@ -40,7 +39,7 @@ client_t **init_clients(int number, int toy_number, toy_t **toys){
 
 // Inicia a instância dos brinquedos
 toy_t **init_toys(int number){
-    toy_t **toys = malloc(number * sizeof(toy_t *));
+    toy_t **toys = malloc(number * sizeof(toy_t));
     for (int i = 0; i < number; i++){
         toys[i] = (toy_t *) malloc(sizeof(toy_t));
         toys[i]->id = i + 1;
@@ -51,8 +50,7 @@ toy_t **init_toys(int number){
 
 // Inicia a instância dos funcionarios
 ticket_t ** init_tickets(int number){
-
-    ticket_t **tickets = malloc(number * sizeof(ticket_t *));;
+    ticket_t **tickets = malloc(number * sizeof(ticket_t));
     for (int i = 0; i < number; i++){
         tickets[i] = (ticket_t *) malloc(sizeof(ticket_t));
         tickets[i]->id = i + 1;
@@ -91,6 +89,7 @@ void finish_tickets(ticket_t **tickets, int number_clients){
  *************************************************/
 
 int main(int argc, char *argv[]){
+
     client_args *cli_args = (client_args *) malloc(sizeof(client_args));
     tickets_args *ticket_args = (tickets_args *) malloc(sizeof(tickets_args));
     toy_args *toys_args = (toy_args *) malloc(sizeof(toy_args));
@@ -122,10 +121,8 @@ int main(int argc, char *argv[]){
 
     // Ligando os brinquedos.
     open_toys(toys_args);
-
     // Os turistas entram no parque.
     open_gate(cli_args);
-    
     // A bilheteria abre.
     open_tickets(ticket_args);
 

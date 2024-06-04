@@ -2,10 +2,8 @@
 #include <queue.h>
 #include <semaphore.h>
 
-// test_variable
-sem_t clients_in_line;
-
 pthread_mutex_t *clients_mutexes;
+int number_of_clients = 0;
 // Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 
 /**********************************

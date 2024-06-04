@@ -12,38 +12,37 @@
 #include "shared.h"
 #include <queue.h>
 
-int ended = 0;
-
-void initialize_ticketing(){
-  sem_init(&clients_in_line, 0 , 0);
-}
-
 // Thread que implementa uma bilheteria
 void *sell(void *args) {
+
+  // casting de void para a estrutura da bilheteria
   ticket_t *ticket = (ticket_t*)args; 
 
   debug("[INFO] - Bilheteria [%d] Abriu!\n", ticket->id);
 
-  // Murta
-  // Enquanto fila nao-vazia
-  
-  while(!ended){
-  // semaforo para esperar ter clientes na fila para prosseguir (evita busy waiting)
-    int coisa;
-    sem_getvalue(&clients_in_line, &coisa);
-    debug("[SEMAPHOR] - bilheteria [%d] // valor do semaforo: [%d]\n", ticket->id, coisa);
-    sem_wait(&clients_in_line);
+  // passando variavel global para alteracao local
+  int n_clients = number_of_clients;
 
-    // verificacao de se tem clientes na fila (vai sempre ser verdadeiro menos quando close_tickets ja foi chamado)
+  while(n_clients > 0){
+
+    // verificacao de se tem clientes na fila (podem ter mais clientes mas n estao na fila ainda)
     if (!is_queue_empty(gate_queue)){
+
+      // pega o cliente da fila
       int id = dequeue(gate_queue);
-      debug("[LOOP] - Bilheteria [%d] atendendo cliente [%d]\n", ticket->id, id);
       
+      // debugging
+      debug("[INFO] - Bilheteria [%d] Atendendo cliente [%d]\n", ticket->id, id);
+
       // libera o cliente para entrar no parque
       pthread_mutex_unlock(&clients_mutexes[id-1]);
 
+      // decrementa o numero de clientes
+      n_clients--;
+
     }
   }
+  
   debug("[INFO] - Bilheteria [%d] Fechou!\n", ticket->id);
   pthread_exit(NULL);
 }
@@ -54,7 +53,6 @@ void *sell(void *args) {
 // Essa função recebe como argumento informações sobre a bilheteria e deve
 // iniciar os atendentes.
 void open_tickets(tickets_args *args) {
-  initialize_ticketing();
 
   // Murta
   // Fila da bilheteria ja criada em main (gate_queue)
@@ -76,6 +74,4 @@ void open_tickets(tickets_args *args) {
 // Essa função deve finalizar a bilheteria
 void close_tickets() {
     debug("[INFO] - Bilheteria Fechou!\n");
-    sem_post(&clients_in_line); // apenas para liberar a bilheteria do trabalho para poder terminar
-    ended = 1;
 }
