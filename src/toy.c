@@ -20,17 +20,21 @@
 // Thread que o brinquedo vai usar durante toda a simulacao do sistema
 void *turn_on(void *args) {
 
-  // Murta
   toy_t *toy = (toy_t *)args; // Casting do argumento na struct do brinquedo
 
   debug("[ON] - O brinquedo  [%d] foi ligado.\n",
         toy->id); // Altere para o id do brinquedo FEITO
 
-  sleep(1);
 
-  // /Murta
+  debug("rodando")
+    
+  debug("desrodando")
+
+
+
   debug("[OFF] - O brinquedo [%d] foi desligado.\n",
         toy->id); // Altere para o id do brinquedo
+
   pthread_exit(NULL);
 }
 

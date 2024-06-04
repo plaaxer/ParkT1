@@ -29,6 +29,8 @@ typedef struct ticket{
 typedef struct toy{
   int id;                   // O id de um brinquedo.
   int capacity;             // A capacidade total de um brinquedo.
+  int curr_capacity;
+  sem_t clients_waiting;
   pthread_t thread;         // A thread de um brinquedo.
 } toy_t;
 

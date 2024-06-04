@@ -26,10 +26,6 @@ void *sell(void *args) {
   while(n_clients > 0){
     sem_wait(&clientes_na_fila);
 
-    if (is_queue_empty(gate_queue)){
-      // debugging
-      debug("[INFO] - Bilheteria [%d] Fila vazia\n", ticket->id);
-    }
     // verificacao de se tem clientes na fila (podem ter mais clientes mas n estao na fila ainda)
     if (!is_queue_empty(gate_queue)){
 

@@ -17,51 +17,23 @@
 pthread_t *clients_t;
 pthread_mutex_t mutex_enqueue = PTHREAD_MUTEX_INITIALIZER;
 
-void initializeClientMutexes() {
-
-  // Aloca e inicializa os mutexes
-  clients_mutexes = malloc(number_of_clients * sizeof(pthread_mutex_t));
-  for (int i = 0; i < number_of_clients; i++) {
-    pthread_mutex_init(&clients_mutexes[i], NULL);
-  }
-
-}
-
-// Criador de clientes
-void create_clients(client_args *args) {
-
-    // Aloca espaco para N threads (N clientes)
-    clients_t = malloc(args->n * sizeof(pthread_t));
-    number_of_clients = args->n;
-
-    // Inicializa os mutexes dos clientes
-    initializeClientMutexes();
-    debug("[INIT] - Inicializando lista de mutex\n");
-
-    // Cria N threads (N clientes)
-    for (int i = 0; i < number_of_clients; i++){
-        pthread_create(&clients_t[i], NULL, enjoy, args->clients[i]);
-    }
-}
-
-// ========= Funções dadas ============= 
+// ========= Funções dadas =============
 
 // Thread que implementa o fluxo do cliente no parque.
 void *enjoy(void *arg) {
 
   // MURTA
-  client_t *client = (client_t *)arg; // casting do argumento na struct do cliente
- 
+  client_t *client =
+      (client_t *)arg; // casting do argumento na struct do cliente
+
   queue_enter(client);
   sleep(1);
-  debug("[ENTER] Turista [%d] entrou no parque com [%d] moedas.\n",
-        client->id,
+  debug("[ENTER] Turista [%d] entrou no parque com [%d] moedas.\n", client->id,
         client->coins);
-  
+
   sleep(1);
 
-  debug("[ENTER] Turista [%d] ta brincando muito feliz!\n",
-      client->id);
+  debug("[ENTER] Turista [%d] ta brincando muito feliz!\n", client->id);
 
   sleep(1);
 
@@ -74,9 +46,7 @@ void buy_coins(client_t *self) {
   // Murta
   self->coins = rand() % (MAX_COINS - 1) + MIN_COINS;
 
-  debug("[CASH] - Turista [%d] comprou [%d] moedas.\n", 
-          self->id, 
-          self->coins);
+  debug("[CASH] - Turista [%d] comprou [%d] moedas.\n", self->id, self->coins);
 }
 
 // Função onde o cliente espera a liberacao da bilheteria para adentrar ao
@@ -101,27 +71,38 @@ void queue_enter(client_t *self) {
   wait_ticket(self);
 
   buy_coins(self);
-
 }
 
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar
 // os clientes.
 void open_gate(client_args *args) {
 
-  create_clients(args);
+  // Aloca espaco para N threads (N clientes)
+  clients_t = malloc(args->n * sizeof(pthread_t));
+  number_of_clients = args->n;
+
+  // Aloca e inicializa os mutexes
+  clients_mutexes = malloc(number_of_clients * sizeof(pthread_mutex_t));
+  for (int i = 0; i < number_of_clients; i++)
+    pthread_mutex_init(&clients_mutexes[i], NULL);
+
+
+  debug("[INIT] - Inicializando lista de mutex\n");
+
+  // Cria N threads (N clientes)
+  for (int i = 0; i < number_of_clients; i++) {
+    pthread_create(&clients_t[i], NULL, enjoy, args->clients[i]);
+  }
 }
 
 // Essa função deve finalizar os clientes
 void close_gate() {
   
-  debug("teste1\n")
   // Espera todas as threads finalizarem
-  for (int i = 0; i < number_of_clients; i++){
-      pthread_join(clients_t[i], NULL);
-  }
-  // Libera a memória
-    free(clients_t);
-    free(clients_mutexes);
+  for (int i = 0; i < number_of_clients; i++) 
+    pthread_join(clients_t[i], NULL);
 
- 
+  // Libera a memória
+  free(clients_t);
+  free(clients_mutexes);
 }
