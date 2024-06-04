@@ -7,6 +7,8 @@
 
 extern pthread_mutex_t *clients_mutexes; // mutexes dos clientes
 extern int number_of_clients; // numero de clientes
+
+extern sem_t clientes_na_fila; // controlar a quantidade de clientes na fila
   
 // Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 

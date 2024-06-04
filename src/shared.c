@@ -4,7 +4,7 @@
 
 pthread_mutex_t *clients_mutexes;
 int number_of_clients = 0;
-// Você pode declarar novas funções (ou variaveis compartilhadas) aqui
+sem_t clientes_na_fila;
 
 /**********************************
  *          ATENÇÃO               *

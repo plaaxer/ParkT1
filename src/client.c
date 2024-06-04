@@ -94,6 +94,7 @@ void queue_enter(client_t *self) {
   // Cliente entra na fila da bilheteria --> mutex para protecao
   pthread_mutex_lock(&mutex_enqueue);
   enqueue(gate_queue, self->id);
+  sem_post(&clientes_na_fila);
   pthread_mutex_unlock(&mutex_enqueue);
 
   // Cliente vai esperar ate ser atendido.
