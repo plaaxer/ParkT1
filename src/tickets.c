@@ -49,6 +49,9 @@ void *sell(void *args) {
 
     }
   }
+  // Se uma thread chegar aqui, significa que todos os clientes já foram atendidos
+  // Dai libera as threads que podem estar "presas"
+  sem_post(&clientes_na_fila);
 
   debug("[INFO] - Bilheteria [%d] Fechou!\n", ticket->id);
   pthread_exit(NULL);
