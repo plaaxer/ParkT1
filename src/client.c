@@ -20,32 +20,35 @@ pthread_mutex_t mutex_enqueue = PTHREAD_MUTEX_INITIALIZER;
 // ========= Funções dadas =============
 
 void playing(toy_t *toy) {
-
+ 
   // ENTRA FILA DO BRINQUEDO
   // Mutex para bloquear a condicao de corrida da inicializacao do brinquedo alem de esperar um cliente. Explicacao no toy.c
   //pthread_mutex_lock(&toy->mutex_start);
   sem_wait(&toy->sem_capacity);
+  debug("[PLAY] - Cliente entrou na fila do brinquedo [%d].\n", toy->id);
   //pthread_mutex_unlock(&toy->mutex_start);
-  // pthread_mutex_lock(&toy->mutex_ready);
-  // // A variavel ready eh utilizada para evitar Spurious Wakeups, alem para outro caso explicado em toy.c.
-  // toy->ready = 1;
-  // // Sinaliza ao brinquedo que ha um cliente dentro dele e que ele poderia comecar a rodar.
-  // pthread_cond_broadcast(&toy->ready_to_start);
-  // pthread_mutex_unlock(&toy->mutex_ready);
+
+
+  pthread_mutex_lock(&toy->mutex_ready);
+  // A variavel ready eh utilizada para evitar Spurious Wakeups, alem para outro caso explicado em toy.c.
+  toy->ready = 1;
+  // Sinaliza ao brinquedo que ha um cliente dentro dele e que ele poderia comecar a rodar.
+  pthread_cond_broadcast(&toy->ready_to_start);
+  pthread_mutex_unlock(&toy->mutex_ready);
 
   // ENTRA NO BRINQUEDO
 
   // Mutex condicional para que o cliente espere o brinquedo iniciar. While (!toy->running) para evitar Spurious Wakeups.
-  // pthread_mutex_lock(&toy->mutex_cond);
-  // while (!toy->running){
-  //   pthread_cond_wait(&toy->cond, &toy->mutex_cond);
-  // }
-  // pthread_mutex_unlock(&toy->mutex_cond);
+  pthread_mutex_lock(&toy->mutex_cond);
+  while (!toy->running){
+    pthread_cond_wait(&toy->cond, &toy->mutex_cond);
+  }
+  pthread_mutex_unlock(&toy->mutex_cond);
 
   // BRINQUEDO FUNCIONANDO
 
   debug("[PLAY] - Cliente brincando no brinquedo [%d].\n", toy->id);
-  sleep(1); // duracao da brinquadeira
+  sleep(0); // duracao da brinquadeira
 
   // quando o sleep acabar, o cliente automaticamente estara fora do brinquedo. Se quiser ir de novo, entrara na fila novamente.
 }
@@ -58,11 +61,11 @@ void *enjoy(void *arg) {
       (client_t *)arg; // casting do argumento na struct do cliente
 
   queue_enter(client);
-  sleep(1);
+  sleep(0);
   debug("[ENTER] Turista [%d] entrou no parque com [%d] moedas.\n", client->id,
         client->coins);
 
-  sleep(1);
+  sleep(0);
 
   while (client->coins > 0) {
     int toy_id = rand() % client->number_toys;
@@ -71,7 +74,7 @@ void *enjoy(void *arg) {
   }
 
 
-  sleep(1);
+  sleep(0);
 
   debug("[EXIT] - O turista saiu do parque.\n");
   pthread_exit(NULL);
