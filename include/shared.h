@@ -5,10 +5,11 @@
 
 #include <semaphore.h>
 
-extern sem_t available_tickets;
-extern sem_t available_clients;
+extern pthread_mutex_t *clients_mutexes; // mutexes dos clientes
+extern int number_of_clients; // numero de clientes
 
-void initialize_ticketing();
+extern sem_t clientes_na_fila; // controlar a quantidade de clientes na fila
+
   
 // Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 

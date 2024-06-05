@@ -12,27 +12,44 @@
 #include "shared.h"
 #include <queue.h>
 
+int n_clients;
+pthread_mutex_t dequeue_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 // Thread que implementa uma bilheteria
 void *sell(void *args) {
+
+  // casting de void para a estrutura da bilheteria
   ticket_t *ticket = (ticket_t*)args; 
 
   debug("[INFO] - Bilheteria [%d] Abriu!\n", ticket->id);
 
-  // Murta
-  // Enquanto fila nao-vazia
+  while(n_clients > 0){
+    sem_wait(&clientes_na_fila);
 
-    if (!is_queue_empty(gate_queue)){ 
-    int id = dequeue(gate_queue);
+    // verificacao de se tem clientes na fila (podem ter mais clientes mas n estao na fila ainda)
+    if (!is_queue_empty(gate_queue)){
 
-    debug("[INFO] - Cliente [%d] atendido.\n", id);
+      pthread_mutex_lock(&dequeue_mutex);
+      // pega o cliente da fila
+      int id = dequeue(gate_queue);
+      
+      // decrementa o numero de clientes
+      n_clients--;
+      pthread_mutex_unlock(&dequeue_mutex);
+
+      // debugging
+      debug("[INFO] - Bilheteria [%d] Atendendo cliente [%d]\n", ticket->id, id);
+
+      // libera o cliente para entrar no parque
+      pthread_mutex_unlock(&clients_mutexes[id-1]);
+
     }
+  }
+  // Quando uma bilheteria chega aqui, significa que todos os clientes já foram atendidos
+  // Portanto o sem_post é chamado para liberar bilheterias/threads que podem estar "presas"
 
-    sem_post(&available_clients);
-    sem_wait(&available_tickets);
-
-    // Libera o cliente
-    // funcao para liberar o cliente AQUI
-
+  sem_post(&clientes_na_fila);
+  debug("[INFO] - Bilheteria [%d] Fechou!\n", ticket->id);
   pthread_exit(NULL);
 }
 
@@ -42,10 +59,12 @@ void *sell(void *args) {
 // Essa função recebe como argumento informações sobre a bilheteria e deve
 // iniciar os atendentes.
 void open_tickets(tickets_args *args) {
-  initialize_ticketing();
 
-  // Murta
   // Fila da bilheteria ja criada em main (gate_queue)
+
+  // passando variavel global para alteracao local
+  n_clients = number_of_clients;
+
   // Cria N threads (N funcionários da bilheteria)
 
   for (int i = 0; i < args->n; i++) {
@@ -58,10 +77,7 @@ void open_tickets(tickets_args *args) {
   }
 }
 
-
-
-
 // Essa função deve finalizar a bilheteria
 void close_tickets() {
-    pthread_exit(NULL); 
+    debug("[INFO] - Bilheteria Fechou!\n");
 }

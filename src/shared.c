@@ -2,17 +2,9 @@
 #include <queue.h>
 #include <semaphore.h>
 
-// oi
-sem_t available_clients;
-sem_t available_tickets;
-
-void initialize_ticketing(){
-  sem_init(&available_clients, 0 , 0);
-  sem_init(&available_tickets, 0 , 0);
-
-}
-
-// Você pode declarar novas funções (ou variaveis compartilhadas) aqui
+pthread_mutex_t *clients_mutexes;
+int number_of_clients = 0;
+sem_t clientes_na_fila;
 
 /**********************************
  *          ATENÇÃO               *
