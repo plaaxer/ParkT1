@@ -23,10 +23,15 @@ void playing(toy_t *toy, int client_id) {
   // ENTRA FILA DO BRINQUEDO
   // Mutex para bloquear a condicao de corrida da inicializacao do brinquedo alem de esperar um cliente. Explicacao no toy.c
   debug("[MUTEX] - Cliente [%d] travado no mutex_start do brinquedo [%d].\n", client_id, toy->id);
-  pthread_mutex_lock(&toy->mutex_start);
+  //pthread_mutex_lock(&toy->mutex_start);
+  //TEMP
+  int sem_capacity_value;
+  sem_getvalue(&toy->sem_capacity, &sem_capacity_value);
+  printf("The value of sem_capacity is: %d\n", sem_capacity_value);
+
   debug("[SEM] - Cliente [%d] travado no sem_capacity do brinquedo [%d].\n", client_id, toy->id);
   sem_wait(&toy->sem_capacity);
-  pthread_mutex_unlock(&toy->mutex_start);
+  //pthread_mutex_unlock(&toy->mutex_start);
 
   // FALA QUE TEM ALGUEM
   debug("[MUTEX] - Cliente [%d] travado no mutex_ready do brinquedo [%d].\n", client_id, toy->id);
