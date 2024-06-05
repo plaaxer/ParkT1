@@ -42,14 +42,16 @@ void playing(toy_t *toy, int client_id) {
   debug("[WAITING] - Cliente [%d] esperando o brinquedo [%d] iniciar.\n", client_id, toy->id);
   // Mutex condicional para que o cliente espere o brinquedo iniciar. While (!toy->running) para evitar Spurious Wakeups.
   pthread_mutex_lock(&toy->mutex_cond);
+
   toy->ready_clients++;
-  pthread_cond_signal(&toy->cond);
+  pthread_cond_signal(&toy->all_clients_ready);
   while (!toy->running){
-    debug("[WAITING] - Cliente [%d] Esperando dentro do cond [%d]. Valor atual de cond: [%d] \n", client_id, toy->id, toy->ready_clients);
+    debug("[WAITING] - Cliente [%d] Esperando dentro do cond [%d]. Valor de ready_clients: [%d] \n", client_id, toy->id, toy->ready_clients);
     pthread_cond_wait(&toy->cond, &toy->mutex_cond);
     debug("[TEMP] - Cliente [%d] foi liberado temporariamente no toy [%d]\n", client_id, toy->id);
   }
   debug("[COND] - Cliente [%d] liberado para brincar no brinquedo [%d].\n", client_id, toy->id);
+
   pthread_mutex_unlock(&toy->mutex_cond);
 
   // BRINQUEDO FUNCIONANDO
@@ -57,9 +59,11 @@ void playing(toy_t *toy, int client_id) {
   debug("[PLAY] - Cliente [%d] brincando no brinquedo [%d].\n", toy->id, client_id);
   sleep(0); // duracao da brinquadeira
 
-  // quando o sleep acabar, o cliente automatar, o cliente automaticamente estara fora do brinquedo. Se quiser ir de novo, entrara na fila novamente.
-}
-
+  pthread_mutex_lock(&toy->mutex_cond);
+  toy->done_clients++;
+  pthread_cond_signal(&toy->ready_to_end);
+  pthread_mutex_unlock(&toy->mutex_cond);
+} 
 
 // Thread que implementa o fluxo do cliente no parque.
 void *enjoy(void *arg) {

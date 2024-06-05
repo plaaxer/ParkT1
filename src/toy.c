@@ -70,7 +70,7 @@ void *turn_on(void *args) {
     pthread_mutex_lock(&toy->mutex_cond);
     debug("[TOY] - Brinquedo [%d] testando. Current clients: [%d]. Valor de running: [%d]. Valor de ready_clients: [%d]\n", toy->id, current_clients, toy->running, toy->ready_clients);
     while (toy->ready_clients < current_clients){
-      pthread_cond_wait(&toy->cond, &toy->mutex_cond);
+      pthread_cond_wait(&toy->all_clients_ready, &toy->mutex_cond);
     }
     debug("[TOY] - Brinquedo [%d} liberou todos os clientes para brincar.\n", toy->id);
     toy->ready_clients = 0;
@@ -82,10 +82,16 @@ void *turn_on(void *args) {
     debug("[TOY] - Brinquedo [%d] rodando --> [%d] lugares restantes --> [%d] capacidade maxima\n", toy->id, missing, toy->capacity);
     sleep(0);
 
-    // PARANDO DE RODAR
+    // ESPERA PARA N TERMINAR COM ALGUEM PRESO
+    pthread_mutex_lock(&toy->mutex_cond);
+    while (toy->done_clients < current_clients){
+      pthread_cond_wait(&toy->ready_to_end, &toy->mutex_cond);
+    }
+    toy->done_clients = 0;
+    pthread_mutex_unlock(&toy->mutex_cond);
+
     // Aqui setamos a variavel running para 0 (brinquedo parou de rodar). Bloqueamos o mutex_start para que nenhum cliente entre (pela
     // mesma razao do inicio) e liberamos os semaforos para que os clientes possam entrar (semaforo valera a capacidade do brinquedo).
-
     toy->running = 0;
     toy->ready = 0;
     for (int i = 0; i < toy->capacity; i++) {

@@ -39,6 +39,9 @@ typedef struct toy{
   int ready;                // Variavel que indica se o brinquedo esta pronto para iniciar. Como no outro condicional, ha necessidade de duas variaveis para evitar Spurious Wakeups.
   pthread_t thread;         // A thread de um brinquedo.
   int ready_clients;        // Numero de clientes prontos para entrar no brinquedo.
+  pthread_cond_t all_clients_ready; // Variavel de condicao para esperar todos os clientes estarem prontos para iniciar.
+  pthread_cond_t ready_to_end; // Variavel de condicao que sinaliza para o brinquedo que ele pode terminar.
+  int done_clients;         // Numero de clientes que terminaram de brincar.
 } toy_t;
 
 /* Adicione as estruturas de sincronização que achar necessárias */
