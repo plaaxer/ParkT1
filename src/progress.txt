@@ -1,27 +1,19 @@
-murta: 
+while(TRUE):
 
-obs: peco perdao pela falta de acentuacao, nao achei nenhum teclado bom em pt-br aqui no manjaro
+	sleep(duracao_esperando) # esperando clientes
+	
+	sem_wait() N vezes --> N = capacidade - pessoas
 
-instanciei os N clientes, os N toys, e os N funcionarios;
-iniciei as threads de cada um deles.
-implementei a fila da bilheteria.
-implementado metodos: buy_coin (client.c), queue_enter (client.c), parte de enjoy (client.c), parte de open_gate (client.c),
-parte de open_toys (toys.c), parte de open_tickets(tickets.c) parte de *sell (tickets.c)
+	sleep(duracao_funcionando)
 
-eu tinha feito uma comunicacao entre a bilheteria e clientes com variavel global, para liberar o cliente, mas estava muito ruim,
-ja que rolava busy waiting (a thread que esta esperando na fila da bilheteria fica testando para ver se nao foi liberada) 
-tem que arrumar algum jeito de fazer void *sell liberar a thread do cliente (ela para em wait_ticket).
+	sem_post() capacidade vezes
 
-ideia: quando eh para a thread do cliente ser liberada (entrar no parque), seu mutex, que estava lockado, eh desblo-
-quado pela bilheteria. Cada struct client teria um mutex (acredito que ele deu dica disso em defs.h).
-Isso remove o busy waiting que teriamos caso ficassemos testando se a thread current esta liberada ou nao.
+CLIENT
 
-agora, como fazer para a thread da bilheteria, tendo acesso apenas ao id do cliente, liberar seu mutex? os clientes teriam que ser va-
-riaveis globais? (ja que n se pode trocar parametros em main.c)
+sem_wait()
 
-pergunta: sera que os clientes precisariam de mutexes de protecao para que duas bilheterias, por exemplo, nao acessem um mesmo cliente?
-seria o // Atende um cliente
-        int id = dequeue(gate_queue); uma regiao critica?
+toy->ready
+while !ready (p_cond_mutex(sla))
 
-outra coisa: a funcao close_gate ou close_toys ou qualquer outra deve ser capaz de encerrar as demais threads (threads dos clientes,
-dos brinquedos e etc).
+toy->duracao_funcionando
+sleep(duracao_funcionando)

@@ -26,10 +26,6 @@ void *sell(void *args) {
   while(n_clients > 0){
     sem_wait(&clientes_na_fila);
 
-    if (is_queue_empty(gate_queue)){
-      // debugging
-      debug("[INFO] - Bilheteria [%d] Fila vazia\n", ticket->id);
-    }
     // verificacao de se tem clientes na fila (podem ter mais clientes mas n estao na fila ainda)
     if (!is_queue_empty(gate_queue)){
 
@@ -49,10 +45,10 @@ void *sell(void *args) {
 
     }
   }
-  // Se uma thread chegar aqui, significa que todos os clientes já foram atendidos
-  // Dai libera as threads que podem estar "presas"
-  sem_post(&clientes_na_fila);
+  // Quando uma bilheteria chega aqui, significa que todos os clientes já foram atendidos
+  // Portanto o sem_post é chamado para liberar bilheterias/threads que podem estar "presas"
 
+  sem_post(&clientes_na_fila);
   debug("[INFO] - Bilheteria [%d] Fechou!\n", ticket->id);
   pthread_exit(NULL);
 }
