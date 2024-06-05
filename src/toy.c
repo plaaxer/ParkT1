@@ -23,6 +23,8 @@ void *turn_on(void *args) {
 
   toy_t *toy = (toy_t *)args; // Casting do argumento na struct do brinquedo
 
+  int current_clients = 0; // Variavel para armazenar a quantidade de clientes que irao brincar
+
   int missing; // Variavel para armazenar a quantidade de clientes que faltam para atingir a capacidade maxima do brinquedo
 
   pthread_mutex_init(&toy->mutex_start, NULL); // inicializa o mutex que controla o bloqueio quando o brinquedo roda
@@ -36,7 +38,7 @@ void *turn_on(void *args) {
   while (ON){
     
     // ESPERANDO CLIENTES
-    sleep(1);
+    sleep(0);
 
     // ANTES DE COMECAR A RODAR
 
@@ -56,6 +58,8 @@ void *turn_on(void *args) {
     for (int i = 0; i < missing; i++) {
       sem_wait(&toy->sem_capacity);
     }
+    debug("[TOY] - Brinquedo [%d] fechou o brinquedo. [%d] lugares restantes.\n", toy->id, missing);
+    current_clients = toy->capacity - missing;
     pthread_mutex_unlock(&toy->mutex_start);
 
     // COMECA A RODAR
@@ -64,6 +68,12 @@ void *turn_on(void *args) {
     // utilizada para evitar Spurious Wakeups.
 
     pthread_mutex_lock(&toy->mutex_cond);
+    debug("[TOY] - Brinquedo [%d] testando. Current clients: [%d]. Valor de running: [%d]. Valor de ready_clients: [%d]\n", toy->id, current_clients, toy->running, toy->ready_clients);
+    while (toy->ready_clients < current_clients){
+      pthread_cond_wait(&toy->cond, &toy->mutex_cond);
+    }
+    debug("[TOY] - Brinquedo [%d} liberou todos os clientes para brincar.\n", toy->id);
+    toy->ready_clients = 0;
     toy->running = 1;
     pthread_cond_broadcast(&toy->cond);
     pthread_mutex_unlock(&toy->mutex_cond);
@@ -76,13 +86,11 @@ void *turn_on(void *args) {
     // Aqui setamos a variavel running para 0 (brinquedo parou de rodar). Bloqueamos o mutex_start para que nenhum cliente entre (pela
     // mesma razao do inicio) e liberamos os semaforos para que os clientes possam entrar (semaforo valera a capacidade do brinquedo).
 
-    //pthread_mutex_lock(&toy->mutex_start);
     toy->running = 0;
     toy->ready = 0;
     for (int i = 0; i < toy->capacity; i++) {
       sem_post(&toy->sem_capacity);
     }
-    //pthread_mutex_unlock(&toy->mutex_start);
   }
 
 

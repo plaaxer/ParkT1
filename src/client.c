@@ -18,14 +18,18 @@ pthread_t *clients_t;
 
 // ========= Funções dadas =============
 
-void playing(toy_t *toy) {
+void playing(toy_t *toy, int client_id) {
  
   // ENTRA FILA DO BRINQUEDO
   // Mutex para bloquear a condicao de corrida da inicializacao do brinquedo alem de esperar um cliente. Explicacao no toy.c
+  debug("[MUTEX] - Cliente [%d] travado no mutex_start do brinquedo [%d].\n", client_id, toy->id);
   pthread_mutex_lock(&toy->mutex_start);
+  debug("[SEM] - Cliente [%d] travado no sem_capacity do brinquedo [%d].\n", client_id, toy->id);
   sem_wait(&toy->sem_capacity);
   pthread_mutex_unlock(&toy->mutex_start);
 
+  // FALA QUE TEM ALGUEM
+  debug("[MUTEX] - Cliente [%d] travado no mutex_ready do brinquedo [%d].\n", client_id, toy->id);
 // Mutex para bloquear a condicao de corrida da inicializacao do brinquedo alem de esperar um cliente. Explicacao no toy.c
   pthread_mutex_lock(&toy->mutex_ready);
   // A variavel ready eh utilizada para evitar Spurious Wakeups, alem para outro caso explicado em toy.c.
@@ -34,21 +38,26 @@ void playing(toy_t *toy) {
   pthread_cond_broadcast(&toy->ready_to_start);
   pthread_mutex_unlock(&toy->mutex_ready);
 
-  // ENTRA NO BRINQUEDO
-
+    // ESPERA PODER COMECAR A SE DIVERTIR
+  debug("[WAITING] - Cliente [%d] esperando o brinquedo [%d] iniciar.\n", client_id, toy->id);
   // Mutex condicional para que o cliente espere o brinquedo iniciar. While (!toy->running) para evitar Spurious Wakeups.
   pthread_mutex_lock(&toy->mutex_cond);
+  toy->ready_clients++;
+  pthread_cond_signal(&toy->cond);
   while (!toy->running){
+    debug("[WAITING] - Cliente [%d] Esperando dentro do cond [%d]. Valor atual de cond: [%d] \n", client_id, toy->id, toy->ready_clients);
     pthread_cond_wait(&toy->cond, &toy->mutex_cond);
+    debug("[TEMP] - Cliente [%d] foi liberado temporariamente no toy [%d]\n", client_id, toy->id);
   }
+  debug("[COND] - Cliente [%d] liberado para brincar no brinquedo [%d].\n", client_id, toy->id);
   pthread_mutex_unlock(&toy->mutex_cond);
 
   // BRINQUEDO FUNCIONANDO
 
-  debug("[PLAY] - Cliente brincando no brinquedo [%d].\n", toy->id);
+  debug("[PLAY] - Cliente [%d] brincando no brinquedo [%d].\n", toy->id, client_id);
   sleep(0); // duracao da brinquadeira
 
-  // quando o sleep acabar, o cliente automaticamente estara fora do brinquedo. Se quiser ir de novo, entrara na fila novamente.
+  // quando o sleep acabar, o cliente automatar, o cliente automaticamente estara fora do brinquedo. Se quiser ir de novo, entrara na fila novamente.
 }
 
 
@@ -67,14 +76,15 @@ void *enjoy(void *arg) {
 
   while (client->coins > 0) {
     int toy_id = rand() % client->number_toys;
-    playing(client->toys[toy_id]);
+    playing(client->toys[toy_id], client->id);
+    debug("Moedas restantes: %d\n", client->coins);
     client->coins--;
   }
 
 
   sleep(0);
 
-  debug("[EXIT] - O turista saiu do parque.\n");
+  debug("[EXIT] - O cliente [%d] saiu do parque.\n", client->id);
   pthread_exit(NULL);
 }
 

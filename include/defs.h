@@ -13,7 +13,7 @@
 
 #define MAX_CAPACITY_TOY    10  // Capacidade maxima dos brinquedos.
 #define MIN_CAPACITY_TOY    5   // Capacidade minima dos brinquedos.
-#define MAX_COINS           5  // Maximo de moedas que um cliente pode comprar
+#define MAX_COINS           20  // Maximo de moedas que um cliente pode comprar
 #define MIN_COINS           1   // Murta
 
 #define DEBUG               1   //  Alterne (0 or 1) essa macro se voce espera desabilitar todas as mensagens de debug.
@@ -38,6 +38,7 @@ typedef struct toy{
   pthread_cond_t ready_to_start;    // Variavel que indica se ha clientes no brinquedo para que ele possa iniciar.
   int ready;                // Variavel que indica se o brinquedo esta pronto para iniciar. Como no outro condicional, ha necessidade de duas variaveis para evitar Spurious Wakeups.
   pthread_t thread;         // A thread de um brinquedo.
+  int ready_clients;        // Numero de clientes prontos para entrar no brinquedo.
 } toy_t;
 
 /* Adicione as estruturas de sincronização que achar necessárias */
