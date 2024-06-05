@@ -13,8 +13,8 @@
 
 #define MAX_CAPACITY_TOY    10  // Capacidade maxima dos brinquedos.
 #define MIN_CAPACITY_TOY    5   // Capacidade minima dos brinquedos.
-#define MAX_COINS           20  // Maximo de moedas que um cliente pode comprar
-#define MIN_COINS           5   // Murta
+#define MAX_COINS           5  // Maximo de moedas que um cliente pode comprar
+#define MIN_COINS           1   // Murta
 
 #define DEBUG               1   //  Alterne (0 or 1) essa macro se voce espera desabilitar todas as mensagens de debug.
 
@@ -29,8 +29,14 @@ typedef struct ticket{
 typedef struct toy{
   int id;                   // O id de um brinquedo.
   int capacity;             // A capacidade total de um brinquedo.
-  int curr_capacity;
-  sem_t clients_waiting;
+  sem_t sem_capacity;       // Semáforo para controlar a capacidade do brinquedo (clientes dentro).
+  pthread_mutex_t mutex_start; // Mutex para controlar a inicialização do brinquedo -> impede que novos clientes quando ele esta iniciando.
+  pthread_mutex_t mutex_cond; // Mutex auxiliar para a variavel de condição que sera usada para o cliente esperar o brinquedo iniciar.
+  pthread_mutex_t mutex_ready; // Mutex auxiliar para a variavel de condição que sera usada para o brinquedo esperar os clientes entrarem.
+  pthread_cond_t cond;      // Variavel de condição para o cliente esperar o brinquedo iniciar.
+  int running;              // Variavel que indica se o brinquedo esta rodando ou nao.
+  pthread_cond_t ready_to_start;    // Variavel que indica se ha clientes no brinquedo para que ele possa iniciar.
+  int ready;                // Variavel que indica se o brinquedo esta pronto para iniciar. Como no outro condicional, ha necessidade de duas variaveis para evitar Spurious Wakeups.
   pthread_t thread;         // A thread de um brinquedo.
 } toy_t;
 

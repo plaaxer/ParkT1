@@ -19,10 +19,44 @@ pthread_mutex_t mutex_enqueue = PTHREAD_MUTEX_INITIALIZER;
 
 // ========= Funções dadas =============
 
+void playing(toy_t *toy) {
+
+  // ENTRA FILA DO BRINQUEDO
+  debug("EU SOU UM CLIEENTE E ESTOU AQUI\n");
+  // Mutex para bloquear a condicao de corrida da inicializacao do brinquedo alem de esperar um cliente. Explicacao no toy.c
+  pthread_mutex_lock(&toy->mutex_start);
+  debug("CONSEGUI PASSAR DO MUTEXXXXX\n");
+  sem_wait(&toy->sem_capacity);
+  pthread_mutex_unlock(&toy->mutex_start);
+
+  pthread_mutex_lock(&toy->mutex_ready);
+  // Sinaliza ao brinquedo que ha um cliente dentro dele e que ele poderia comecar a rodar.
+  pthread_cond_broadcast(&toy->ready_to_start);
+  // A variavel ready eh utilizada para evitar Spurious Wakeups, alem para outro caso explicado em toy.c.
+  toy->ready = 1;
+  pthread_mutex_unlock(&toy->mutex_ready);
+
+  // ENTRA NO BRINQUEDO
+
+  // Mutex condicional para que o cliente espere o brinquedo iniciar. While (!toy->running) para evitar Spurious Wakeups.
+  pthread_mutex_lock(&toy->mutex_cond);
+  while (!toy->running){
+    pthread_cond_wait(&toy->cond, &toy->mutex_cond);
+  }
+  pthread_mutex_unlock(&toy->mutex_cond);
+
+  // BRINQUEDO FUNCIONANDO
+
+  debug("[PLAY] - Cliente brincando no brinquedo [%d].\n", toy->id);
+  sleep(1); // duracao da brinquadeira
+
+  // quando o sleep acabar, o cliente automaticamente estara fora dele. Se quiser ir de novo, entrara na fila novamente.
+}
+
+
 // Thread que implementa o fluxo do cliente no parque.
 void *enjoy(void *arg) {
 
-  // MURTA
   client_t *client =
       (client_t *)arg; // casting do argumento na struct do cliente
 
@@ -33,7 +67,12 @@ void *enjoy(void *arg) {
 
   sleep(1);
 
-  debug("[ENTER] Turista [%d] ta brincando muito feliz!\n", client->id);
+  while (client->coins > 0) {
+    int toy_id = rand() % client->number_toys;
+    playing(client->toys[toy_id]);
+    client->coins--;
+  }
+
 
   sleep(1);
 
@@ -43,7 +82,7 @@ void *enjoy(void *arg) {
 
 // Funcao onde o cliente compra as moedas para usar os brinquedos
 void buy_coins(client_t *self) {
-  // Murta
+
   self->coins = rand() % (MAX_COINS - 1) + MIN_COINS;
 
   debug("[CASH] - Turista [%d] comprou [%d] moedas.\n", self->id, self->coins);
@@ -53,7 +92,7 @@ void buy_coins(client_t *self) {
 // parque.
 void wait_ticket(client_t *self) {
 
-  // cliente vai ser travado ate que a bilheteria o libere
+  // cliente vai ser travado ate que a bilheteria o libere //ALTERAR PARA SEMAFORO BINARIO DEPOIS
   pthread_mutex_lock(&clients_mutexes[self->id - 1]);
   pthread_mutex_lock(&clients_mutexes[self->id - 1]);
 }
