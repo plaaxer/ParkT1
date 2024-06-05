@@ -41,29 +41,30 @@ void *turn_on(void *args) {
     // Aqui, pegamos o valor de quantos clientes faltam para a capacidade maxima e preenchemos o semaforo para que nenhum cliente
     // entre enquanto o brinquedo roda. O mutex eh para que nenhum cliente entre, o que possivelmente tornaria o valor de getValue
     // incorreto.
-    pthread_mutex_lock(&toy->mutex_start);
+    //pthread_mutex_lock(&toy->mutex_start);
     sem_getvalue(&toy->sem_capacity, &missing);
     for (int i = 0; i < missing; i++) {
       sem_wait(&toy->sem_capacity);
     }
-    pthread_mutex_unlock(&toy->mutex_start);
+    //pthread_mutex_unlock(&toy->mutex_start);
 
     // Aqui ocorre a verificacao de se ha clientes no brinquedo. Se nao houver, o brinquedo nao pode rodar. Obviamente, nao ha busy waiting
     // pois o brinquedo espera por um sinal para comecar a rodar --> o toy->ready eh para evitar Spurious Wakeups.
-    pthread_mutex_lock(&toy->mutex_ready);
-    while (!toy->ready) {
-      pthread_cond_wait(&toy->ready_to_start, &toy->mutex_start);
-    pthread_mutex_unlock(&toy->mutex_ready);
-  }
+    // pthread_mutex_lock(&toy->mutex_ready);
+    // while (!toy->ready) {
+    //   pthread_cond_wait(&toy->ready_to_start, &toy->mutex_ready);
+    // }
+    // pthread_mutex_unlock(&toy->mutex_ready);
 
     // COMECA A RODAR
     // Aqui bloqueamos o mutex_condicional para poder atualizarmos a variavel de condicao e liberar os clientes que estavam esperando
     // o brinquedo rodar. Alem disso setamos a variavel auxiliar running para 1, indicando que o brinquedo esta rodando. A running eh
     // utilizada para evitar Spurious Wakeups.
-    pthread_mutex_lock(&toy->mutex_cond);
-    toy->running = 1;
-    pthread_cond_broadcast(&toy->cond);
-    pthread_mutex_unlock(&toy->mutex_cond);
+
+    // pthread_mutex_lock(&toy->mutex_cond);
+    // toy->running = 1;
+    // pthread_cond_broadcast(&toy->cond);
+    // pthread_mutex_unlock(&toy->mutex_cond);
 
     // RODANDO
     debug("[TOY] - Brinquedo [%d] rodando --> [%d] lugares restantes --> [%d] capacidade maxima\n", toy->id, missing, toy->capacity);
@@ -83,7 +84,7 @@ void *turn_on(void *args) {
 
 
   debug("[OFF] - O brinquedo [%d] foi desligado.\n",
-        toy->id); // Altere para o id do brinquedo
+        toy->id);
 
   pthread_exit(NULL);
 }
