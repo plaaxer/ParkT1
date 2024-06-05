@@ -13,6 +13,7 @@
 #include "shared.h"
 #include "toy.h"
 
+toy_args* toys_info;
 
 int ON = 1; // Variavel global para ligar/desligar os brinquedos
 
@@ -35,7 +36,7 @@ void *turn_on(void *args) {
   while (ON){
     
     // ESPERANDO CLIENTES
-    sleep(0);
+    sleep(1);
 
     // ANTES DE COMECAR A RODAR
 
@@ -97,6 +98,7 @@ void *turn_on(void *args) {
 
 // Essa função recebe como argumento informações e deve iniciar os brinquedos.
 void open_toys(toy_args *args) {
+  toys_info = args;
 
   // Cria N threads (N brinquedos)
   for (int i = 0; i < args->n; i++) 

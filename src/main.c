@@ -16,11 +16,13 @@
 
 // Inicia a fila
 void init_main_queue(){
+    pthread_mutex_init(&queue_mutex, NULL);
     gate_queue = create_queue();
 }
 
 // Destroi a fila
 void destroy_main_queue(){
+    pthread_mutex_destroy(&queue_mutex);
     destroy_queue(gate_queue);
 }
 

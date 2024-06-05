@@ -15,7 +15,6 @@
 #include <unistd.h>
 
 pthread_t *clients_t;
-pthread_mutex_t mutex_enqueue = PTHREAD_MUTEX_INITIALIZER;
 
 // ========= Funções dadas =============
 
@@ -84,31 +83,31 @@ void buy_coins(client_t *self) {
 
   self->coins = rand() % (MAX_COINS - 1) + MIN_COINS;
 
-  debug("[CASH] - Turista [%d] comprou [%d] moedas.\n", self->id, self->coins);
 }
 
 // Função onde o cliente espera a liberacao da bilheteria para adentrar ao
 // parque.
 void wait_ticket(client_t *self) {
-
   // cliente vai ser travado ate que a bilheteria o libere //ALTERAR PARA SEMAFORO BINARIO DEPOIS
-  pthread_mutex_lock(&clients_mutexes[self->id - 1]);
-  pthread_mutex_lock(&clients_mutexes[self->id - 1]);
+  sem_wait(&(client_semaphores[self->id - 1]));
 }
 
 // Funcao onde o cliente entra na fila da bilheteria
 void queue_enter(client_t *self) {
 
   // Cliente entra na fila da bilheteria --> mutex para protecao
-  pthread_mutex_lock(&mutex_enqueue);
+  pthread_mutex_lock(&queue_mutex);
   enqueue(gate_queue, self->id);
-  sem_post(&clientes_na_fila);
-  pthread_mutex_unlock(&mutex_enqueue);
+  sem_post(&clients_on_queue);
+  pthread_mutex_unlock(&queue_mutex);
 
   // Cliente vai esperar ate ser atendido.
   wait_ticket(self);
 
   buy_coins(self);
+
+  debug("[CASH] - Turista [%d] comprou [%d] moedas.\n", self->id, self->coins);
+
 }
 
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar
@@ -120,9 +119,9 @@ void open_gate(client_args *args) {
   number_of_clients = args->n;
 
   // Aloca e inicializa os mutexes
-  clients_mutexes = malloc(number_of_clients * sizeof(pthread_mutex_t));
+  client_semaphores = malloc(number_of_clients * sizeof(sem_t));
   for (int i = 0; i < number_of_clients; i++)
-    pthread_mutex_init(&clients_mutexes[i], NULL);
+    sem_init(&client_semaphores[i], 0, 0);
 
 
   debug("[INIT] - Inicializando lista de mutex\n");
@@ -142,5 +141,5 @@ void close_gate() {
 
   // Libera a memória
   free(clients_t);
-  free(clients_mutexes);
+  free(client_semaphores);
 }

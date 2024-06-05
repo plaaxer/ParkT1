@@ -2,9 +2,11 @@
 #include <queue.h>
 #include <semaphore.h>
 
-pthread_mutex_t *clients_mutexes;
+sem_t* client_semaphores;
+pthread_mutex_t queue_mutex;
+
 int number_of_clients = 0;
-sem_t clientes_na_fila;
+sem_t clients_on_queue;
 
 /**********************************
  *          ATENÇÃO               *
