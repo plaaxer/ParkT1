@@ -50,12 +50,12 @@ void *turn_on(void *args) {
     // Aqui, pegamos o valor de quantos clientes faltam para a capacidade maxima e preenchemos o semaforo para que nenhum cliente
     // entre enquanto o brinquedo roda. O mutex eh para que nenhum cliente entre, o que possivelmente tornaria o valor de getValue
     // incorreto.
-    //pthread_mutex_lock(&toy->mutex_start);
+    pthread_mutex_lock(&toy->mutex_start);
     sem_getvalue(&toy->sem_capacity, &missing);
     for (int i = 0; i < missing; i++) {
       sem_wait(&toy->sem_capacity);
     }
-    //pthread_mutex_unlock(&toy->mutex_start);
+    pthread_mutex_unlock(&toy->mutex_start);
 
     // COMECA A RODAR
     // Aqui bloqueamos o mutex_condicional para poder atualizarmos a variavel de condicao e liberar os clientes que estavam esperando

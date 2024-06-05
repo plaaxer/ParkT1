@@ -23,12 +23,11 @@ void playing(toy_t *toy) {
  
   // ENTRA FILA DO BRINQUEDO
   // Mutex para bloquear a condicao de corrida da inicializacao do brinquedo alem de esperar um cliente. Explicacao no toy.c
-  //pthread_mutex_lock(&toy->mutex_start);
+  pthread_mutex_lock(&toy->mutex_start);
   sem_wait(&toy->sem_capacity);
-  debug("[PLAY] - Cliente entrou na fila do brinquedo [%d].\n", toy->id);
-  //pthread_mutex_unlock(&toy->mutex_start);
+  pthread_mutex_unlock(&toy->mutex_start);
 
-
+// Mutex para bloquear a condicao de corrida da inicializacao do brinquedo alem de esperar um cliente. Explicacao no toy.c
   pthread_mutex_lock(&toy->mutex_ready);
   // A variavel ready eh utilizada para evitar Spurious Wakeups, alem para outro caso explicado em toy.c.
   toy->ready = 1;
