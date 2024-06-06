@@ -40,6 +40,7 @@ void playing(toy_t *toy, int client_id) {
 
   toy->ready_clients++;
 
+ // Explicacoes em toy.c
   pthread_cond_signal(&toy->all_clients_ready);
 
   while (!toy->running)
