@@ -47,10 +47,10 @@ void *turn_on(void *args) {
       pthread_cond_wait(&toy->ready_to_start, &toy->mutex_ready);
     }
     pthread_mutex_unlock(&toy->mutex_ready);
-    // Aqui, pegamos o valor de quantos clientes faltam para a capacidade maxima e preenchemos o semaforo para que nenhum cliente
-    // entre enquanto o brinquedo roda. O mutex eh para que nenhum cliente entre, o que possivelmente tornaria o valor de getValue
-    // incorreto.
-
+    
+    // Aqui, pegamos o valor de quantos clientes faltam para a capacidade maxima (missing) e preenchemos o semaforo para que nenhum cliente
+    // entre enquanto o brinquedo roda. Tambem pegamos o valor de current_clients que eh quantos clientes irao brincar nessa rodada.
+    
     sem_getvalue(&toy->sem_capacity, &missing);
     for (int i = 0; i < missing; i++) {
       sem_wait(&toy->sem_capacity);
@@ -59,12 +59,17 @@ void *turn_on(void *args) {
 
     // COMECA A RODAR
 
-    // Aqui bloqueamos o mutex_condicional para poder atualizarmos a variavel de condicao e liberar os clientes que estavam esperando
+    // Primeiro bloqueamos o mutex_condicional para poder atualizarmos a variavel de condicao "cond" e liberar os clientes que estavam esperando
     // o brinquedo rodar. Alem disso setamos a variavel auxiliar running para 1, indicando que o brinquedo esta rodando. A running eh
-    // utilizada para evitar Spurious Wakeups.
+    // utilizada para evitar Spurious Wakeups - e tambem eh util em alguns outros casos.
 
     pthread_mutex_lock(&toy->mutex_cond);
 
+    // Aqui aproveitamos o mesmo mutex para utilizar outra variavel condicional chamada "all_clients_ready", que indica quando todos os clientes
+    // que irao brincar nessa rodada estao prontos dentro do brinquedo. Estar "pronto" significa estar apenas esperando o sinal - ou melhor,
+    // broadcast - para poder comecar a brincar. Toda vez que um cliente fica "pronto" ele testa a condicao while(ready_clients<curren_clients),
+    // e, caso falsa, isso indica que ele poderia comecar a rodar.
+    
     while (toy->ready_clients < current_clients)
       pthread_cond_wait(&toy->all_clients_ready, &toy->mutex_cond);
     
@@ -73,12 +78,18 @@ void *turn_on(void *args) {
     pthread_cond_broadcast(&toy->cond);
     pthread_mutex_unlock(&toy->mutex_cond);
 
+    // Ou seja -> o brinquedo espera todo mundo ficar pronto, que eh quando &all_clients_ready o libera. Depois, ele libera todo mundo para brincar,
+    // atraves do broadcast em &cond.
+
     // RODANDO
 
     debug("[TOY] - Brinquedo [%d] rodando, foram ocupados [%d/%d] lugares.\n", toy->id, missing, toy->capacity);
     sleep(0);
-
+    
     // ESPERA PARA N TERMINAR COM ALGUEM PRESO
+    // Aqui ocorre algo parecido com o inicio, so que dessa vez, ao inves de esperar todos ficarem prontos, agora eh esperar nao ter ninguem mais brincando.
+    // Isso significa que o brinquedo pode parar de rodar e ir para a proxima etapa. Dessa vez, &ready_to_end e int done_clients sao utilizados como controles.
+    
     pthread_mutex_lock(&toy->mutex_cond);
     while (toy->done_clients < current_clients){
       pthread_cond_wait(&toy->ready_to_end, &toy->mutex_cond);
@@ -86,8 +97,9 @@ void *turn_on(void *args) {
     toy->done_clients = 0;
     pthread_mutex_unlock(&toy->mutex_cond);
 
-    // Aqui setamos a variavel running para 0 (brinquedo parou de rodar). Bloqueamos o mutex_start para que nenhum cliente entre (pela
-    // mesma razao do inicio) e liberamos os semaforos para que os clientes possam entrar (semaforo valera a capacidade do brinquedo).
+    //TERMINANDO E ESVAZIANDO O BRINQUEDO
+    // Aqui setamos a variavel running para 0 (brinquedo parou de rodar) e liberamos os semaforos para que os clientes possam entrar (semaforo valera a capacidade do brinquedo).
+    // Alem disso, setamos ready a 0 novamente para indicar que o brinquedo tem que esperar alguem entrar para iniciar novamente.
     toy->running = 0;
     toy->ready = 0;
     for (int i = 0; i < toy->capacity; i++) {
